@@ -50,10 +50,20 @@ const sample = (rootEl) => {
 
 /**
  * Build a weighted palette array for O(1) random color picks.
+ * Pre-sizes the output array to avoid repeated spread allocations (was O(N²)).
  * @param {Array<{hex:string, count:number}>} dist
  * @returns {string[]}
  */
-const weightedPalette = (dist) =>
-    dist.reduce((p, e) => [...p, ...Array(e.count).fill(e.hex)], []);
+const weightedPalette = (dist) => {
+    let total = 0;
+    for (let i = 0; i < dist.length; i++) total += dist[i].count;
+    const out = new Array(total);
+    let idx = 0;
+    for (let i = 0; i < dist.length; i++) {
+        const { hex, count } = dist[i];
+        for (let j = 0; j < count; j++) out[idx++] = hex;
+    }
+    return out;
+};
 
 export { sample, weightedPalette };

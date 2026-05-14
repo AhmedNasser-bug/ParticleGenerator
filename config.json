@@ -22,6 +22,18 @@
             "jitterStrength": 0.002
         }
     },
+    "noise": {
+        "timeScale": 0.001
+    },
+    "physics": {
+        "damping": 0.98,
+        "viewportLimit": 1.5,
+        "lifeMin": 300,
+        "lifeRange": 500,
+        "sizeMin": 0.5,
+        "sizeRange": 1.5,
+        "initialVelocityRange": 0.005
+    },
     "performance": {
         "maxParticles": 5000,
         "minFpsThreshold": 30,
@@ -32,6 +44,7 @@
         "defaultShape": "circle",
         "shapeSize": 4.0,
         "blendMode": "normal",
-        "glowIntensity": 0.15
+        "glowIntensity": 0.15,
+        "sizeToClipScale": 0.02
     }
 }

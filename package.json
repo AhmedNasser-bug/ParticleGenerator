@@ -16,12 +16,9 @@
     "files": [
         "dist/",
         "GeneratorMain.js",
-        "System/",
         "Core/",
-        "Distribution/",
-        "Particle/",
-        "GenerationAlgorithms/",
-        "GL/",
+        "Logic/",
+        "Interface/",
         "TraceLog.js",
         "config.json"
     ],
