@@ -1,0 +1,47 @@
+{
+    "name": "particle-wrap",
+    "version": "1.0.0",
+    "description": "WebGL2 particle generator web component with DOM color sampling, Perlin noise flow, and configurable glow effects.",
+    "type": "module",
+    "main": "./dist/particle-wrap.umd.js",
+    "module": "./dist/particle-wrap.esm.js",
+    "exports": {
+        ".": {
+            "import": "./dist/particle-wrap.esm.js",
+            "require": "./dist/particle-wrap.umd.js",
+            "default": "./dist/particle-wrap.esm.js"
+        },
+        "./GeneratorMain": "./GeneratorMain.js"
+    },
+    "files": [
+        "dist/",
+        "GeneratorMain.js",
+        "System/",
+        "Core/",
+        "Distribution/",
+        "Particle/",
+        "GenerationAlgorithms/",
+        "GL/",
+        "TraceLog.js",
+        "config.json"
+    ],
+    "scripts": {
+        "build": "vite build",
+        "prepublishOnly": "npm run build",
+        "test": "node --experimental-vm-modules node_modules/.bin/jest --passWithNoTests",
+        "dev": "vite",
+        "preview": "vite preview"
+    },
+    "devDependencies": {
+        "vite": "^5.0.0"
+    },
+    "keywords": [
+        "webgl2",
+        "particles",
+        "web-component",
+        "custom-element",
+        "perlin-noise",
+        "shadow-dom"
+    ],
+    "license": "MIT"
+}

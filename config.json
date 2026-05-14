@@ -1,0 +1,37 @@
+{
+    "particleCount": 3000,
+    "emission": {
+        "radius": 250,
+        "falloff": 1.2
+    },
+    "colorDistribution": [],
+    "noiseRegistry": {
+        "active": "perlin",
+        "providers": {
+            "perlin": {
+                "octaves": 3,
+                "persistence": 0.5,
+                "scale": 0.02
+            },
+            "white": {
+                "amplitude": 1.0
+            }
+        },
+        "mixing": {
+            "flowStrength": 0.004,
+            "jitterStrength": 0.002
+        }
+    },
+    "performance": {
+        "maxParticles": 5000,
+        "minFpsThreshold": 30,
+        "autoThrottle": true,
+        "throttleStep": 500
+    },
+    "render": {
+        "defaultShape": "circle",
+        "shapeSize": 4.0,
+        "blendMode": "normal",
+        "glowIntensity": 0.15
+    }
+}

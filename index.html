@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Particle Wrap — Interactive Demo</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: #0a0a0f;
+            color: #ddd;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+
+        /* ── Control Panel ── */
+        .controls {
+            position: fixed;
+            bottom: 32px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+            display: flex;
+            gap: 24px;
+            align-items: center;
+            background: rgba(12, 12, 18, 0.85);
+            backdrop-filter: blur(12px);
+            padding: 16px 28px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .controls label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: rgba(255, 255, 255, 0.4);
+            gap: 4px;
+            min-width: 90px;
+        }
+
+        .controls label span {
+            font-size: 0.85rem;
+            color: #fff;
+            font-weight: 500;
+        }
+
+        .controls input[type="range"] {
+            width: 100px;
+            height: 4px;
+            -webkit-appearance: none;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 2px;
+            outline: none;
+        }
+
+        .controls input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #7c6;
+            cursor: pointer;
+            border: 2px solid #0a0a0f;
+        }
+
+        .controls select {
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 8px;
+            padding: 6px 12px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            outline: none;
+        }
+
+        .controls select option {
+            background: #1a1a24;
+        }
+
+        /* ── Demo Card (light DOM content) ── */
+        .demo-card {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            text-align: center;
+            pointer-events: none;
+        }
+
+        .demo-card h1 {
+            font-size: clamp(2rem, 6vw, 5rem);
+            margin: 0;
+            font-weight: 200;
+            letter-spacing: 0.08em;
+            color: #c4a87c;
+        }
+
+        .demo-card p {
+            font-size: clamp(0.9rem, 1.5vw, 1.3rem);
+            opacity: 0.5;
+            margin-top: 0.5rem;
+            color: #e8d5b7;
+        }
+
+        .demo-card .badge {
+            margin-top: 1.5rem;
+            padding: 0.3rem 1rem;
+            border-radius: 2rem;
+            border: 1px solid rgba(168, 139, 106, 0.25);
+            font-size: 0.75rem;
+            color: #a88b6a;
+        }
+
+        @media (max-width: 640px) {
+            .controls {
+                gap: 12px;
+                padding: 12px 16px;
+                width: 94%;
+                bottom: 16px;
+            }
+
+            .controls label {
+                min-width: 70px;
+            }
+
+            .controls input[type="range"] {
+                width: 70px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ═══ particle-wrap: custom element, declarative ═══ -->
+    <particle-wrap id="particleWrap" noise-type="perlin" glow="0.25" emission-radius="280" density="2500">
+        <div class="demo-card">
+            <h1>particle-wrap</h1>
+            <p>WebGL2 · Shadow DOM · color-aware · glow</p>
+            <div class="badge" id="statusBadge">perlin · glow 0.25 · 2 500 particles</div>
+        </div>
+    </particle-wrap>
+
+    <!-- ═══ Control Panel ═══ -->
+    <div class="controls" id="controls">
+        <label>
+            glow
+            <input type="range" id="sliderGlow" min="0" max="0.8" step="0.01" value="0.25" />
+            <span id="valGlow">0.25</span>
+        </label>
+
+        <label>
+            radius
+            <input type="range" id="sliderRadius" min="50" max="500" step="10" value="280" />
+            <span id="valRadius">280</span>
+        </label>
+
+        <label>
+            density
+            <input type="range" id="sliderDensity" min="500" max="6000" step="100" value="2500" />
+            <span id="valDensity">2 500</span>
+        </label>
+
+        <label>
+            noise
+            <select id="selectNoise">
+                <option value="perlin" selected>perlin</option>
+                <option value="white">white</option>
+            </select>
+        </label>
+    </div>
+
+    <script type="module">
+        import './GeneratorMain.js';
+        // ── after the custom element is registered, we can interact ──
+
+        const wrap = document.getElementById('particleWrap');
+        const badge = document.getElementById('statusBadge');
+
+        // Helper: update attribute → element auto-reacts via connectedCallback
+        const setAttr = (name, val) => {
+            wrap.setAttribute(name, val);
+            // Re-initialise by removing and re-inserting
+            // (Alternatively we can call connectedCallback manually via a small lifecycle helper)
+            // Simpler: replace the element in-place to trigger connectedCallback
+            const parent = wrap.parentNode;
+            const next = wrap.nextSibling;
+            const clone = wrap.cloneNode(true);
+            parent.removeChild(wrap);
+            parent.insertBefore(clone, next);
+            // Re-bind badge
+            document.getElementById('sliderGlow').value = clone.getAttribute('glow');
+        };
+
+        // A more robust approach: wrap in a mutation-aware re-boot
+        // We'll just set attributes and let the element's connectedCallback handle it
+        // Since connectedCallback reads attributes on mount, we need to force remount
+        const remount = () => {
+            const parent = wrap.parentNode;
+            const next = wrap.nextSibling;
+            const clone = document.createElement('particle-wrap');
+            // Copy all attributes
+            for (const attr of wrap.attributes) clone.setAttribute(attr.name, attr.value);
+            parent.removeChild(wrap);
+            parent.insertBefore(clone, next);
+            // Update badge text
+            const g = clone.getAttribute('glow');
+            const r = clone.getAttribute('emission-radius');
+            const d = clone.getAttribute('density');
+            const n = clone.getAttribute('noise-type');
+            badge.textContent = `${n} · glow ${g} · ${parseInt(d).toLocaleString()} particles`;
+            // Re-attach event handlers to new sliders
+            window._particleWrap = clone;
+            document.querySelectorAll('.controls input, .controls select').forEach(el => {
+                // handlers already attached via the new page
+            });
+        };
+
+        // Slider event binding — use a debounced remount
+        let remountTimer = null;
+        const scheduleRemount = () => {
+            if (remountTimer) clearTimeout(remountTimer);
+            remountTimer = setTimeout(remount, 150);
+        };
+
+        // Slider: glow
+        const sGlow = document.getElementById('sliderGlow');
+        const vGlow = document.getElementById('valGlow');
+        sGlow.addEventListener('input', () => {
+            vGlow.textContent = parseFloat(sGlow.value).toFixed(2);
+            wrap.setAttribute('glow', sGlow.value);
+            scheduleRemount();
+        });
+
+        // Slider: radius
+        const sRadius = document.getElementById('sliderRadius');
+        const vRadius = document.getElementById('valRadius');
+        sRadius.addEventListener('input', () => {
+            vRadius.textContent = sRadius.value;
+            wrap.setAttribute('emission-radius', sRadius.value);
+            scheduleRemount();
+        });
+
+        // Slider: density
+        const sDensity = document.getElementById('sliderDensity');
+        const vDensity = document.getElementById('valDensity');
+        sDensity.addEventListener('input', () => {
+            vDensity.textContent = parseInt(sDensity.value).toLocaleString();
+            wrap.setAttribute('density', sDensity.value);
+            scheduleRemount();
+        });
+
+        // Select: noise type
+        const sNoise = document.getElementById('selectNoise');
+        sNoise.addEventListener('change', () => {
+            wrap.setAttribute('noise-type', sNoise.value);
+            scheduleRemount();
+        });
+
+        // Trigger once to set badge
+        badge.textContent = `perlin · glow 0.25 · 2 500 particles`;
+    </script>
+</body>
+
+</html>
