@@ -10,7 +10,8 @@ const extract = (root) => {
     const colors = [];
     for (let i = 0; i < els.length; i++) {
         const s = getComputedStyle(els[i]);
-        const props = [s.color, s.backgroundColor, s.borderColor, s.borderTopColor, s.borderRightColor, s.borderBottomColor, s.borderLeftColor, s.backgroundImage];
+        // Only sample background properties to prevent text color (white/black) from flooding the palette
+        const props = [s.backgroundColor, s.backgroundImage];
         props.forEach((c) => {
             if (!c) return;
             // Match any rgb or rgba pattern in the property (handles gradients and solid colors)

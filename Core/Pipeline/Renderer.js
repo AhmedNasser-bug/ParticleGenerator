@@ -24,11 +24,11 @@ class Renderer {
         parentEl.appendChild(this.canvas);
 
         const gl = this.canvas.getContext('webgl2', {
-            antialias:false, alpha:true, premultipliedAlpha:false,
-            preserveDrawingBuffer:false, powerPreference:'high-performance', desynchronized:true,
+            antialias:false, alpha:true,
+            preserveDrawingBuffer:false, powerPreference:'high-performance',
         });
         if (!gl) throw new Error('WebGL2 unavailable');
-        gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+        gl.enable(gl.BLEND); gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
         gl.disable(gl.DEPTH_TEST); gl.disable(gl.CULL_FACE);
         gl.viewport(0, 0, w, h);
         this.gl = gl;
@@ -52,12 +52,30 @@ class Renderer {
             gl.bufferData(gl.ARRAY_BUFFER, 5000 * INST_FLOATS * 4, gl.DYNAMIC_DRAW);
             return buf;
         });
+
+        this._vaos = shapeGeos.map((geo, i) => {
+            const vao = gl.createVertexArray();
+            gl.bindVertexArray(vao);
+            
+            gl.bindBuffer(gl.ARRAY_BUFFER, geo.vbo);
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, geo.ibo);
+            gl.enableVertexAttribArray(this._loc.aPos);
+            gl.vertexAttribPointer(this._loc.aPos, 2, gl.FLOAT, false, geo.stride, 0);
+            gl.vertexAttribDivisor(this._loc.aPos, 0);
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, this._ivbo[i]);
+            bindInstAttr(gl, this._loc.aTrans, 2, 28,  0);
+            bindInstAttr(gl, this._loc.aScale, 1, 28,  8);
+            bindInstAttr(gl, this._loc.aColor, 4, 28, 12);
+            
+            gl.bindVertexArray(null);
+            return vao;
+        });
     }
 
     execute(queue) {
         const gl = this.gl;
-        const { aPos, aTrans, aScale, aColor, uGlow } = this._loc;
-        const instStride = INST_FLOATS * 4;
+        const { uGlow } = this._loc;
 
         for (const cmd of queue.drain()) {
             switch (cmd.type) {
@@ -66,27 +84,21 @@ class Renderer {
                 case Cmd.SET_GLOW:
                     gl.uniform1f(uGlow, cmd.intensity); break;
                 case Cmd.DRAW_INSTANCES: {
-                    const geo = this._geo[cmd.shapeIdx], ivbo = this._ivbo[cmd.shapeIdx];
+                    const geo = this._geo[cmd.shapeIdx], ivbo = this._ivbo[cmd.shapeIdx], vao = this._vaos[cmd.shapeIdx];
                     if (!geo || cmd.count === 0) break;
+                    
                     gl.bindBuffer(gl.ARRAY_BUFFER, ivbo);
-                    const reqBytes = cmd.count * INST_FLOATS * 4;
+                    const reqBytes = cmd.count * 28; // INST_FLOATS * 4
                     if (!ivbo._capacity || reqBytes > ivbo._capacity) {
-                        const newCap = Math.max(reqBytes, (ivbo._capacity || 0) * 2, 5000 * INST_FLOATS * 4);
+                        const newCap = Math.max(reqBytes, (ivbo._capacity || 0) * 2, 5000 * 28);
                         gl.bufferData(gl.ARRAY_BUFFER, newCap, gl.DYNAMIC_DRAW);
                         ivbo._capacity = newCap;
                     }
-                    gl.bufferSubData(gl.ARRAY_BUFFER, 0,
-                        cmd.instanceBuffer.subarray(0, cmd.count * INST_FLOATS));
-                    gl.bindBuffer(gl.ARRAY_BUFFER, geo.vbo);
-                    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, geo.ibo);
-                    gl.enableVertexAttribArray(aPos);
-                    gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, geo.stride, 0);
-                    gl.vertexAttribDivisor(aPos, 0);
-                    gl.bindBuffer(gl.ARRAY_BUFFER, ivbo);
-                    bindInstAttr(gl, aTrans, 2, instStride,  0);
-                    bindInstAttr(gl, aScale, 1, instStride,  8);
-                    bindInstAttr(gl, aColor, 4, instStride, 12);
+                    gl.bufferSubData(gl.ARRAY_BUFFER, 0, cmd.instanceBuffer.subarray(0, cmd.count * 7)); // INST_FLOATS
+
+                    gl.bindVertexArray(vao);
                     gl.drawElementsInstanced(gl.TRIANGLES, geo.indexCount, gl.UNSIGNED_SHORT, 0, cmd.count);
+                    gl.bindVertexArray(null);
                     break;
                 }
             }
