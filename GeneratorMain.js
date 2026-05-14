@@ -10,7 +10,7 @@
  *   Core tier      : Core/Renderer.js           (all WebGL)
  */
 import config from './config.json';
-import { ParticleWrap } from './Interface/ParticleWrap.js';
+import { ParticleWrap } from './Interface/Element/ParticleWrap.js';
 
 ParticleWrap.define('particle-wrap', config);
 

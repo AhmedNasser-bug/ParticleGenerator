@@ -16,9 +16,9 @@
     "files": [
         "dist/",
         "GeneratorMain.js",
-        "Core/",
-        "Logic/",
-        "Interface/",
+        "Core/Pipeline/","Core/utils/",
+        "Logic/Noise/","Logic/Particle/","Logic/Color/","Logic/Performance/","Logic/utils/",
+        "Interface/Element/","Interface/Orchestration/","Interface/utils/",
         "TraceLog.js",
         "config.json"
     ],
