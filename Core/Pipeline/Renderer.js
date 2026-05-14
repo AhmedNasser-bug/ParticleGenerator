@@ -17,11 +17,15 @@ class Renderer {
             position:'absolute', top:'0', left:'0',
             width:'100%', height:'100%', pointerEvents:'none', zIndex:'1',
         });
-        const w = Math.max(parentEl.offsetWidth  || window.innerWidth,  1);
-        const h = Math.max(parentEl.offsetHeight || window.innerHeight, 1);
+        // Use window dimensions — parentEl.offsetWidth is 0 before layout completes
+        const w = window.innerWidth  || 1;
+        const h = window.innerHeight || 1;
         this.canvas.width = w; this.canvas.height = h;
         this.canvas.dataset.particleCanvas = 'true';
         parentEl.appendChild(this.canvas);
+        // Keep canvas resolution in sync with actual layout
+        this._ro = new ResizeObserver(() => this.resize());
+        this._ro.observe(parentEl);
 
         const gl = this.canvas.getContext('webgl2', {
             antialias:false, alpha:true,
@@ -107,14 +111,15 @@ class Renderer {
 
     resize() {
         if (!this.canvas || !this.gl) return;
-        const p = this.canvas.parentElement; if (!p) return;
-        const w = Math.max(p.offsetWidth || window.innerWidth, 1);
-        const h = Math.max(p.offsetHeight || window.innerHeight, 1);
+        const w = Math.max(window.innerWidth,  1);
+        const h = Math.max(window.innerHeight, 1);
+        if (this.canvas.width === w && this.canvas.height === h) return;
         this.canvas.width = w; this.canvas.height = h;
         this.gl.viewport(0, 0, w, h);
     }
 
     destroy() {
+        this._ro?.disconnect();
         const gl = this.gl;
         if (gl) {
             if (this._prog) gl.deleteProgram(this._prog);

@@ -2,7 +2,7 @@
     "particleCount": 3000,
     "emission": {
         "radius": 250,
-        "falloff": 1.2
+        "falloff": 0.5
     },
     "colorDistribution": [],
     "noiseRegistry": {
@@ -45,6 +45,6 @@
         "shapeSize": 4.0,
         "blendMode": "normal",
         "glowIntensity": 0.15,
-        "sizeToClipScale": 0.004
+        "sizeToClipScale": 0.008
     }
 }

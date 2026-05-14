@@ -68,7 +68,9 @@ const boot = (lightDomEl, mountEl, rawConfig = defaultConfig) => {
             if (patch.render)  Object.assign(config.render, patch.render);
             if (patch.emission) {
                 Object.assign(config.emission, patch.emission);
-                system.setEmission(config.emission.radius / 250, config.emission.falloff);
+                // Use same NDC conversion: pixel radius / (half viewport height)
+                const ndcRadius = config.emission.radius / (window.innerHeight / 2);
+                system.setEmission(ndcRadius, config.emission.falloff);
             }
             if (patch.noiseType !== undefined) { config.noiseRegistry.active = patch.noiseType; system.setNoiseType(patch.noiseType); }
             if (patch.particleCount !== undefined) {
@@ -81,11 +83,14 @@ const boot = (lightDomEl, mountEl, rawConfig = defaultConfig) => {
     } catch (err) { failure('Boot', 'Failed', { error: err.message }); return null; }
 };
 
-const _make = (config, palette, shapeCount) =>
-    new ParticleSystem(config.particleCount, palette, shapeCount,
+const _make = (config, palette, shapeCount) => {
+    // Convert pixel radius to NDC: half-screen height = 1.0 NDC
+    const ndcRadius = config.emission.radius / (window.innerHeight / 2);
+    return new ParticleSystem(config.particleCount, palette, shapeCount,
         config.noiseRegistry,
-        { radius: config.emission.radius / 250, falloff: config.emission.falloff },
+        { radius: ndcRadius, falloff: config.emission.falloff },
         config.physics, config.noise);
+};
 
 const _batch = (particles, count, shapeCount, scratch, sc, renderCfg) => {
     const cs = renderCfg.sizeToClipScale ?? 0.02;
