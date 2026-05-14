@@ -10,9 +10,20 @@ const extract = (root) => {
     const colors = [];
     for (let i = 0; i < els.length; i++) {
         const s = getComputedStyle(els[i]);
-        [s.color, s.backgroundColor, s.borderColor,
-        s.borderTopColor, s.borderRightColor, s.borderBottomColor, s.borderLeftColor]
-            .forEach((c) => { if (c && c.startsWith('rgb')) colors.push(c); });
+        const props = [s.color, s.backgroundColor, s.borderColor, s.borderTopColor, s.borderRightColor, s.borderBottomColor, s.borderLeftColor, s.backgroundImage];
+        props.forEach((c) => {
+            if (!c) return;
+            // Match any rgb or rgba pattern in the property (handles gradients and solid colors)
+            const matches = c.match(/rgba?\([^)]+\)/g);
+            if (matches) {
+                matches.forEach(m => {
+                    // Ignore completely transparent colors
+                    const alphaMatch = m.match(/rgba\([^,]+,\s*[^,]+,\s*[^,]+,\s*([0-9.]+)\)/);
+                    if (alphaMatch && parseFloat(alphaMatch[1]) === 0) return;
+                    colors.push(m);
+                });
+            }
+        });
     }
     return colors;
 };

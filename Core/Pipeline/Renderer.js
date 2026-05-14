@@ -21,7 +21,6 @@ class Renderer {
         const h = Math.max(parentEl.offsetHeight || window.innerHeight, 1);
         this.canvas.width = w; this.canvas.height = h;
         this.canvas.dataset.particleCanvas = 'true';
-        parentEl.style.position = 'relative';
         parentEl.appendChild(this.canvas);
 
         const gl = this.canvas.getContext('webgl2', {
@@ -70,6 +69,12 @@ class Renderer {
                     const geo = this._geo[cmd.shapeIdx], ivbo = this._ivbo[cmd.shapeIdx];
                     if (!geo || cmd.count === 0) break;
                     gl.bindBuffer(gl.ARRAY_BUFFER, ivbo);
+                    const reqBytes = cmd.count * INST_FLOATS * 4;
+                    if (!ivbo._capacity || reqBytes > ivbo._capacity) {
+                        const newCap = Math.max(reqBytes, (ivbo._capacity || 0) * 2, 5000 * INST_FLOATS * 4);
+                        gl.bufferData(gl.ARRAY_BUFFER, newCap, gl.DYNAMIC_DRAW);
+                        ivbo._capacity = newCap;
+                    }
                     gl.bufferSubData(gl.ARRAY_BUFFER, 0,
                         cmd.instanceBuffer.subarray(0, cmd.count * INST_FLOATS));
                     gl.bindBuffer(gl.ARRAY_BUFFER, geo.vbo);

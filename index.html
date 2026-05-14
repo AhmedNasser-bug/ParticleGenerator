@@ -13,7 +13,7 @@
         body {
             margin: 0;
             overflow: hidden;
-            background: #0a0a12;
+            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364); /* Colorful dark gradient */
             color: #fff;
             font-family: system-ui, -apple-system, sans-serif;
         }
@@ -224,53 +224,31 @@
         const wrap = document.getElementById('particleWrap');
         const badge = document.getElementById('statusBadge');
 
-        const remount = () => {
-            const parent = wrap.parentNode;
-            const next = wrap.nextSibling;
-            const clone = document.createElement('particle-wrap');
-            for (const attr of wrap.attributes) clone.setAttribute(attr.name, attr.value);
-            // Clone children (light DOM content)
-            for (const child of wrap.childNodes) clone.appendChild(child.cloneNode(true));
-            parent.removeChild(wrap);
-            parent.insertBefore(clone, next);
-            // Update badge
-            const g = clone.getAttribute('glow');
-            const r = clone.getAttribute('emission-radius');
-            const d = clone.getAttribute('density');
-            const n = clone.getAttribute('noise-type');
-            document.getElementById('statusBadge').textContent =
-                `${n} · glow ${g} · ${parseInt(d).toLocaleString()} particles`;
-            // Update sliders to match
-            document.getElementById('valGlow').textContent = g;
-            document.getElementById('valRadius').textContent = r;
-            document.getElementById('valDensity').textContent = parseInt(d).toLocaleString();
-            document.getElementById('selectNoise').value = n;
-        };
-
-        let timer = null;
-        const schedule = () => {
-            if (timer) clearTimeout(timer);
-            timer = setTimeout(remount, 180);
+        const updateBadge = () => {
+            const g = wrap.getAttribute('glow');
+            const d = wrap.getAttribute('density');
+            const n = wrap.getAttribute('noise-type');
+            badge.textContent = `${n} · glow ${g} · ${parseInt(d).toLocaleString()} particles`;
         };
 
         document.getElementById('sliderGlow').addEventListener('input', function () {
             document.getElementById('valGlow').textContent = this.value;
             wrap.setAttribute('glow', this.value);
-            schedule();
+            updateBadge();
         });
         document.getElementById('sliderRadius').addEventListener('input', function () {
             document.getElementById('valRadius').textContent = this.value;
             wrap.setAttribute('emission-radius', this.value);
-            schedule();
+            updateBadge();
         });
         document.getElementById('sliderDensity').addEventListener('input', function () {
             document.getElementById('valDensity').textContent = parseInt(this.value).toLocaleString();
             wrap.setAttribute('density', this.value);
-            schedule();
+            updateBadge();
         });
         document.getElementById('selectNoise').addEventListener('change', function () {
             wrap.setAttribute('noise-type', this.value);
-            schedule();
+            updateBadge();
         });
     </script>
 </body>

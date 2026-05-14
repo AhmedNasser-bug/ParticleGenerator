@@ -36,9 +36,20 @@ class ParticleWrap extends HTMLElement {
         const cfg = mergeAttrConfig(ParticleWrap._defaultConfig, this);
         try {
             success('ParticleWrap', 'Mounting');
+            // Host styling
+            const style = document.createElement('style');
+            style.textContent = ':host { display: block; position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; overflow: hidden; }';
+            shadow.appendChild(style);
+
             const mountEl = document.createElement('div');
-            mountEl.style.cssText = 'position:relative;width:100%;height:100%;min-height:100px';
+            mountEl.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;';
             shadow.appendChild(mountEl);
+
+            const slotContainer = document.createElement('div');
+            slotContainer.style.cssText = 'position:relative;z-index:1;width:100%;height:100%;';
+            slotContainer.innerHTML = '<slot></slot>';
+            shadow.appendChild(slotContainer);
+
             this._gen = boot(this, mountEl, cfg);
             this._gen?.start();
         } catch (err) { failure('ParticleWrap', 'Init failed', { error: err.message }); }
